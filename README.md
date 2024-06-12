@@ -1,4 +1,4 @@
-Built by Android Jetpack Compose, MVI, Clean Architecture.
+Built by Android Jetpack Compose, MVI.
 
 ## Prerequisites:
 
@@ -11,7 +11,7 @@ Built by Android Jetpack Compose, MVI, Clean Architecture.
 Add  `API_KEY` and `MAPS_API_KEY` inside `local.properties` to build and run:
 
     API_KEY=API_KEY // Fill your open weather api key in here
-    MAPS_API_KEY=GOOGLE_MAPS_API_KEY // Fill your google maps api key in here
+    MAPS_API_KEY=GOOGLE_MAPS_API_KEY // Fill your Google Maps api key in here
 
 ## Features
 - Show the current weather for the user location.
