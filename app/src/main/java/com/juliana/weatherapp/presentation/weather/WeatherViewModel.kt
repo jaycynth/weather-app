@@ -10,7 +10,6 @@ import androidx.lifecycle.viewModelScope
 import com.juliana.weatherapp.domain.location.LocationTracker
 import com.juliana.weatherapp.domain.repository.WeatherRepository
 import com.juliana.weatherapp.domain.util.Resource
-import com.juliana.weatherapp.domain.util.hasInternetConnection
 import com.juliana.weatherapp.domain.weather.ForecastData
 import com.juliana.weatherapp.domain.weather.WeatherData
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -20,29 +19,35 @@ import javax.inject.Inject
 @HiltViewModel
 class WeatherViewModel @Inject constructor(
     private val repository: WeatherRepository,
-    private val locationTracker: LocationTracker,
+    private val locationTracker: LocationTracker
 ) : ViewModel() {
 
     var state by mutableStateOf(WeatherState())
-       private set
+        private set
 
+    init {
+        loadWeather()
+    }
 
     fun loadWeather() {
         viewModelScope.launch {
             setLoadingState()
             locationTracker.getCurrentLocation()?.let { location ->
+                loadCurrentLocation(location)
                 loadForecast(location)
                 loadCurrentWeather(location)
-                loadCurrentLocation(location)
             } ?: run {
-                setErrorState("Couldn't retrieve location. Enable GPS.")
+                updateState(
+                    isLoading = false,
+                    error = "Couldn't retrieve location, Enable GPS"
+                )
             }
         }
     }
 
     private fun loadCurrentLocation(location: Location) {
         viewModelScope.launch {
-            state = state.copy(
+            updateState(
                 lat = location.latitude,
                 lon = location.longitude,
                 error = null
@@ -50,53 +55,76 @@ class WeatherViewModel @Inject constructor(
         }
     }
 
-
     private fun setLoadingState() {
-        state = state.copy(
+        updateState(
             isLoading = true,
             error = null
         )
     }
 
-    private fun setErrorState(message: String) {
-        state = state.copy(
-            isLoading = false,
-            error = message
-        )
-    }
-
     private suspend fun loadForecast(location: Location) {
         repository.forecast(location.latitude, location.longitude).collect { result ->
-            handleResult(result) { forecastInfo ->
-                state = state.copy(
+            handleResult(result, onSuccess = { forecastInfo ->
+                updateState(
                     forecastInfo = forecastInfo,
                     isLoading = false,
                     error = null
                 )
-            }
+            }, onFailure = { message, forecastInfo ->
+                updateState(
+                    isLoading = false,
+                    error = message,
+                    forecastInfo = forecastInfo
+                )
+            })
         }
     }
 
     private suspend fun loadCurrentWeather(location: Location) {
         repository.currentWeather(location.latitude, location.longitude).collect { result ->
-            handleResult(result) { weatherData ->
-                state = state.copy(
+            handleResult(result, onSuccess = { weatherData ->
+                updateState(
                     weatherData = weatherData,
                     isLoading = false,
                     error = null
                 )
-            }
+            }, onFailure = { message, weatherData ->
+                updateState(
+                    weatherData = weatherData,
+                    isLoading = false,
+                    error = message
+                )
+            })
         }
     }
 
-    private fun <T> handleResult(result: Resource<T>, onSuccess: (T?) -> Unit) {
+    private fun <T> handleResult(
+        result: Resource<T>,
+        onSuccess: (T?) -> Unit,
+        onFailure: (String, T?) -> Unit
+    ) {
         when (result) {
             is Resource.Loading -> setLoadingState()
             is Resource.Success -> onSuccess(result.data)
-            is Resource.Error -> { setErrorState(result.message)
-
-            }
+            is Resource.Error -> onFailure(result.message, result.data as T)
         }
     }
 
+    private fun updateState(
+        isLoading: Boolean = state.isLoading,
+        error: String? = state.error,
+        lat: Double? = state.lat,
+        lon: Double? = state.lon,
+        weatherData: WeatherData? = state.weatherData,
+        forecastInfo: ForecastData? = state.forecastInfo
+    ) {
+        state = state.copy(
+            isLoading = isLoading,
+            error = error,
+            lat = lat,
+            lon = lon,
+            weatherData = weatherData,
+            forecastInfo = forecastInfo
+        )
+    }
 }

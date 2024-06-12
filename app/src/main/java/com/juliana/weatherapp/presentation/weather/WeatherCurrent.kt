@@ -22,7 +22,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import com.juliana.weatherapp.domain.weather.WeatherType
 import com.juliana.weatherapp.presentation.ui.theme.cloudy
 import com.juliana.weatherapp.presentation.ui.theme.rainy
@@ -42,8 +41,9 @@ fun getBackgroundColor(weatherType: WeatherType): Color {
 fun WeatherCurrent(
     state: WeatherState,
     modifier: Modifier = Modifier,
-    navController: NavController,
 ) {
+
+
     state.weatherData?.let { data ->
 
         val backgroundColor = getBackgroundColor(data.weatherType)

@@ -1,10 +1,7 @@
 package com.juliana.weatherapp.presentation
 
 import android.Manifest
-import android.content.Context
-import android.content.pm.PackageManager
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
@@ -42,7 +39,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.juliana.weatherapp.domain.util.isLocationPermissionGranted
 import com.juliana.weatherapp.presentation.favourites.MapScreen
 import com.juliana.weatherapp.presentation.favourites.MapsViewModel
 import com.juliana.weatherapp.presentation.ui.theme.WeatherAppTheme
@@ -67,8 +63,6 @@ class MainActivity : ComponentActivity() {
         setContent {
             WeatherAppTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    Log.d("STATE", viewModel.state.toString())
-
                     val navController = rememberNavController()
                     val items = listOf(
                         NavigationItems(
@@ -113,7 +107,6 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun setupPermissionLauncher() {
-        Log.d("CALLED","CALLED")
         permissionLauncher =
             registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
                 viewModel.loadWeather()
@@ -163,16 +156,6 @@ fun DrawerContent(
     }
 }
 
-
-data class NavigationItems(
-    val title: String,
-    val selectedIcon: ImageVector,
-    val unselectedIcon: ImageVector,
-    val badgeCount: Int? = null,
-    val route: String,
-
-    )
-
 @Composable
 fun NavigationGraph(
     viewModel: WeatherViewModel,
@@ -195,3 +178,13 @@ fun NavigationGraph(
         }
     }
 }
+
+
+data class NavigationItems(
+    val title: String,
+    val selectedIcon: ImageVector,
+    val unselectedIcon: ImageVector,
+    val badgeCount: Int? = null,
+    val route: String,
+
+    )
