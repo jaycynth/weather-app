@@ -3,13 +3,9 @@ package com.juliana.weatherapp.data.mappers
 import com.juliana.weatherapp.data.local.WeatherEntity
 import com.juliana.weatherapp.domain.util.toInt
 import com.juliana.weatherapp.domain.util.toLocalDateTime
-import com.juliana.weatherapp.domain.weather.WeatherData
 import com.juliana.weatherapp.domain.weather.ForecastData
+import com.juliana.weatherapp.domain.weather.WeatherData
 import com.juliana.weatherapp.domain.weather.WeatherType
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.time.ZoneOffset
 import java.util.Locale
 
 
@@ -26,7 +22,7 @@ fun WeatherEntity.toWeatherData(): WeatherData {
     return WeatherData(
         lon = lon,
         lat = lat,
-        time = LocalDateTime.ofInstant(Instant.ofEpochSecond(dt.toLong()), ZoneId.systemDefault()),
+        time = dt.toLocalDateTime(),
         tempratureMin = tempMin,
         tempratureMax = tempMax,
         temprature = temp,
@@ -40,7 +36,7 @@ fun WeatherData.toEntity(): WeatherEntity {
         id = 0,
         lat = this.lat,
         lon = this.lon,
-        dt = this.time.toEpochSecond(ZoneOffset.UTC).toInt(),
+        dt = this.time.toInt(),
         temp = this.temprature,
         tempMin = this.tempratureMin,
         tempMax = this.tempratureMax,

@@ -7,8 +7,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.ToggleOff
 import androidx.compose.material.icons.filled.ToggleOn
+import androidx.compose.material3.DrawerState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -17,8 +19,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -31,36 +35,51 @@ import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.rememberMarkerState
 import androidx.navigation.NavController
 import com.juliana.weatherapp.presentation.ui.theme.Purple80
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MapScreen(
     viewModel: MapsViewModel,
     navController: NavController,
-) {
+    drawerState: DrawerState,
+
+    ) {
     val uiSettings = remember {
         MapUiSettings(zoomControlsEnabled = false)
     }
 
     val context = LocalContext.current
-
+    val scope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
             TopAppBar(
+                colors = TopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = Color.White,
+                    actionIconContentColor = Color.White,
+                    navigationIconContentColor = Color.White,
+                    scrolledContainerColor = Color.Transparent
+                ),
                 title = { Text("Favourite Locations", fontSize = 16.sp) },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(onClick = {
+                        scope.launch {
+                            drawerState.apply {
+                                if (isClosed) open() else close()
+                            }
+                        }
+                    }) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            imageVector = Icons.Default.Menu,
+                            contentDescription = "Menu"
                         )
                     }
-                },
+                }
             )
 
-        },
-        floatingActionButton = {
+        }, floatingActionButton = {
             FloatingActionButton(
                 onClick = { viewModel.onEvent(MapEvent.ToggleFalloutMap) },
                 containerColor = MaterialTheme.colorScheme.primary
@@ -73,19 +92,16 @@ fun MapScreen(
                     tint = Color.White
                 )
             }
-        },
-        content = { paddingValues ->
+        }, content = { paddingValues ->
             BackHandler {
                 navController.popBackStack()
             }
-            GoogleMap(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
+            GoogleMap(modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues),
                 properties = viewModel.state.properties,
                 uiSettings = uiSettings,
-                onMapLongClick = { viewModel.onEvent(MapEvent.OnMapLongClick(it)) }
-            ) {
+                onMapLongClick = { viewModel.onEvent(MapEvent.OnMapLongClick(it)) }) {
                 if (viewModel.state.favouriteLocations.isNotEmpty()) {
                     viewModel.state.favouriteLocations.forEach { spot ->
                         val markerState = rememberMarkerState(position = LatLng(spot.lat, spot.lng))
@@ -110,6 +126,5 @@ fun MapScreen(
                         .show()
                 }
             }
-        }
-    )
+        })
 }

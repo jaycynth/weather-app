@@ -1,9 +1,13 @@
 package com.juliana.weatherapp.data.mappers
 
+import android.util.Log
 import com.juliana.weatherapp.data.models.CurrentWeatherResponse
 import com.juliana.weatherapp.data.models.ForecastResponse
 import com.juliana.weatherapp.data.models.Weather
+import com.juliana.weatherapp.domain.util.Constants.weekdays
+import com.juliana.weatherapp.domain.util.getDayOfWeek
 import com.juliana.weatherapp.domain.util.getDayOfWeekName
+import com.juliana.weatherapp.domain.util.toLocalDateTime
 import com.juliana.weatherapp.domain.weather.WeatherData
 import com.juliana.weatherapp.domain.weather.ForecastData
 import com.juliana.weatherapp.domain.weather.WeatherType
@@ -26,12 +30,11 @@ fun Weather.toWeatherType(): WeatherType? {
 
 
 fun CurrentWeatherResponse.toWeatherData(): WeatherData {
-    val localDateTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(this.dt.toLong()), ZoneId.systemDefault())
 
     val weatherType = this.weather.firstOrNull()?.toWeatherType()
 
     return WeatherData(
-        time = localDateTime,
+        time = this.dt.toLocalDateTime(),
         tempratureMin = this.main.temp_min,
         tempratureMax = this.main.temp_max,
         temprature = this.main.temp,
@@ -44,34 +47,28 @@ fun CurrentWeatherResponse.toWeatherData(): WeatherData {
 
 
 fun ForecastResponse.toForecastData(): ForecastData {
-    val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-    val dayFormat = SimpleDateFormat("EEEE", Locale.getDefault())
 
     val weatherDataPerDay = mutableMapOf<String, MutableList<WeatherData>>()
-    val weekdays = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday")
-
-    val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-
 
     this.list.forEach { forecast ->
-        val date = dateFormat.parse(forecast.dt_txt)
-        val dayOfWeek = dayFormat.format(date ?: return@forEach)
+        val dayOfWeek = getDayOfWeek(forecast.dt_txt)
 
         if (dayOfWeek in weekdays) {
             val weatherData = WeatherData(
                 tempratureMax = forecast.main.temp_max,
                 tempratureMin = forecast.main.temp_min,
                 temprature = forecast.main.temp,
-                weatherType = forecast.weather[0].main.toWeatherType()!!,
-                time = LocalDateTime.parse(forecast.dt_txt, dateTimeFormatter),
+                weatherType = forecast.weather.firstOrNull()?.main?.toWeatherType() ?: WeatherType.Cloudy,
+                time = forecast.dt.toLocalDateTime(),
                 lat =this.city.coord.lat,
                 lon =this.city.coord.lon,
-                dayOfWeek = forecast.dt.toLong().getDayOfWeekName()
+                dayOfWeek = getDayOfWeek(forecast.dt_txt)
                 )
             if (!weatherDataPerDay.containsKey(dayOfWeek)) {
                 weatherDataPerDay[dayOfWeek] = mutableListOf()
             }
             weatherDataPerDay[dayOfWeek]?.add(weatherData)
+
         }
     }
 

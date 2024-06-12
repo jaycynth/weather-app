@@ -1,5 +1,6 @@
 package com.juliana.weatherapp.data.repository
 
+import android.util.Log
 import com.juliana.weatherapp.BuildConfig
 import com.juliana.weatherapp.data.local.WeatherDao
 import com.juliana.weatherapp.data.mappers.toEntity
@@ -30,7 +31,7 @@ class WeatherRepositoryImpl @Inject constructor(
             saveRemoteData = { weatherData ->
                 weatherData.toWeatherData().let { weatherDao.insertCurrentWeather(it.toEntity()) }
             },
-            mapRemoteToLocal = { it.toWeatherData() }
+            mapRemoteToLocal = { it.toWeatherData() },
         )
     }
 

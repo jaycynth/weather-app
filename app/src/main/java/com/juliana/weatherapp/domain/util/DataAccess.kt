@@ -1,44 +1,51 @@
 package com.juliana.weatherapp.domain.util
 
+import android.util.Log
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import retrofit2.HttpException
-import java.io.IOException
 
 
 object DataAccess {
+
     suspend fun <LocalType, RemoteType> fetchData(
         fetchLocal: suspend () -> LocalType?,
         fetchRemote: suspend () -> RemoteType?,
         saveRemoteData: suspend (RemoteType) -> Unit,
         mapRemoteToLocal: (RemoteType) -> LocalType,
     ): Flow<Resource<LocalType>> = flow {
+
         emit(Resource.Loading)
 
         val localData = fetchLocal()
-        if (localData != null) {
+        localData?.let {
             emit(Resource.Success(localData))
         }
 
-        when (val remoteResult = apiErrorHandling { fetchRemote() }) {
-            is Resource.Success -> {
-                val remoteData = remoteResult.data
-                if (remoteData != null) {
-                    val localMappedData = mapRemoteToLocal(remoteData)
-                    saveRemoteData(remoteData)
-                    emit(Resource.Success(localMappedData))
-                } else {
-                    emit(Resource.Error("Failed to load remote data", localData))
+
+        if (hasInternetConnection()) {
+            val remoteResult = apiErrorHandling { fetchRemote() }
+            when (remoteResult) {
+                is Resource.Success -> {
+                    val remoteData = remoteResult.data
+                    if (remoteData != null) {
+                        val localMappedData = mapRemoteToLocal(remoteData)
+                        saveRemoteData(remoteData)
+                        emit(Resource.Success(localMappedData))
+                    } else {
+                        emit(Resource.Error("No remote data found"))
+                    }
+                }
+
+                is Resource.Error -> {
+                    emit(Resource.Error(remoteResult.message))
+                }
+
+                Resource.Loading -> {
+                    emit(Resource.Loading)
                 }
             }
-
-            is Resource.Error -> {
-                emit(Resource.Error(remoteResult.message, localData))
-            }
-
-            is Resource.Loading -> {
-                emit(Resource.Loading)
-            }
+        } else {
+            emit(Resource.Error("No Internet"))
         }
     }
 
@@ -46,14 +53,9 @@ object DataAccess {
         return try {
             val result = apiCall()
             Resource.Success(result)
-        } catch (e: IOException) {
-            Resource.Error("Network error. Please check your connection and try again.", e)
-        } catch (e: HttpException) {
-            Resource.Error("Server error. Please try again later.", e)
         } catch (e: Exception) {
-            e.printStackTrace()
-            Resource.Error("An unknown error occurred.", e)
+            Resource.Error(e.localizedMessage ?: "An error occurred")
         }
     }
-
 }
+

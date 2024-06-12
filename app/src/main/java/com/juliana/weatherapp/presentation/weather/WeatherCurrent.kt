@@ -2,7 +2,6 @@ package com.juliana.weatherapp.presentation.weather
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,7 +23,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.juliana.weatherapp.R
 import com.juliana.weatherapp.domain.weather.WeatherType
 import com.juliana.weatherapp.presentation.ui.theme.cloudy
 import com.juliana.weatherapp.presentation.ui.theme.rainy
@@ -71,22 +68,7 @@ fun WeatherCurrent(
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.matchParentSize()
                 )
-//                Button(
-//                    onClick = {
-//                    navController.navigate("favourites")
-//                }) {
-//                    Text("Favorites")
-//                }
-                Image(
-                    painter = painterResource(id = R.drawable.baseline_favorite_24),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(60.dp)
-                        .padding(10.dp)
-                        .clickable {
-                            navController.navigate("favourites")
-                        }
-                )
+
                 Column(
                     modifier = Modifier
                         .fillMaxSize()

@@ -1,6 +1,7 @@
 package com.juliana.weatherapp.presentation.weather
 
 import android.location.Location
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -9,6 +10,9 @@ import androidx.lifecycle.viewModelScope
 import com.juliana.weatherapp.domain.location.LocationTracker
 import com.juliana.weatherapp.domain.repository.WeatherRepository
 import com.juliana.weatherapp.domain.util.Resource
+import com.juliana.weatherapp.domain.util.hasInternetConnection
+import com.juliana.weatherapp.domain.weather.ForecastData
+import com.juliana.weatherapp.domain.weather.WeatherData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -20,6 +24,7 @@ class WeatherViewModel @Inject constructor(
 ) : ViewModel() {
 
     var state by mutableStateOf(WeatherState())
+       private set
 
 
     fun loadWeather() {
@@ -88,11 +93,8 @@ class WeatherViewModel @Inject constructor(
         when (result) {
             is Resource.Loading -> setLoadingState()
             is Resource.Success -> onSuccess(result.data)
-            is Resource.Error -> {
-                state = state.copy(
-                    isLoading = false,
-                    error = result.message
-                )
+            is Resource.Error -> { setErrorState(result.message)
+
             }
         }
     }
